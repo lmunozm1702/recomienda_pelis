@@ -154,3 +154,4 @@ cython_debug/
 # Datasets originales
 datasets/credits.csv
 datasets/movies_dataset.csv
+Diccionario de Datos - PIMLOps.xlsx
