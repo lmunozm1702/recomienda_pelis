@@ -10,9 +10,10 @@ def test_enviroment(enviroment, start_response):
   response = {}
 
   selected_movies_columns = ['belongs_to_collection', 'popularity', 'release_year', 'return']
+  selected_credits_columns = ['id']
 
   start = time.perf_counter()
-  df_credits = pd.read_parquet("datasets/credits_dataset.parquet")
+  df_credits = pd.read_parquet("datasets/credits_dataset.parquet", columns=selected_credits_columns)
   end = time.perf_counter()
   #print(f"Tiempo de lectura del parquet credits: {end - start:0.4f} segundos")
   response.update({"credits": f"Tiempo de lectura del parquet credits: {end - start:0.4f} segundos"})
