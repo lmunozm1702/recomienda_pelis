@@ -10,3 +10,4 @@
   - **ipykernel** : v6.29.5
   - **pyarrow** : v16.1.0
   - **nbformat** : v5.10.4
+  - **pandasql** : v0.7.3
