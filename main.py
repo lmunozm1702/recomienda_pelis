@@ -184,7 +184,7 @@ async def get_actor( actor: str ):
   df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
   movies_end = time.perf_counter()
 
-  sql_result = psql.sqldf("SELECT count(df_movies.id) as cantidad, SUM(return) as retorno_total FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE df_credits.actors LIKE '%{actor}%'".format(actor=actor.lower()))
+  sql_result = psql.sqldf("SELECT count(df_movies.id) as cantidad, SUM(return) as retorno_total FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.actors) LIKE '%{actor}%'".format(actor=actor.lower()))
   
   if sql_result.empty or sql_result.values[0][0] == 0 or sql_result.values[0][1] == None:
     return {
@@ -196,7 +196,7 @@ async def get_actor( actor: str ):
     }
   
   cantidad = (sql_result.values[0][0])
-  retorno_total = (sql_result.values[0][1] * 1000000).round(1)
+  retorno_total = (sql_result.values[0][1]).round(1)
   retorno_promedio = (retorno_total / cantidad).round(1)
 
   return {
@@ -212,3 +212,50 @@ async def get_actor( actor: str ):
     "error": None
   }
 
+#Se ingresa el nombre de un director que se encuentre dentro de un dataset debiendo devolver el éxito del mismo medido a través del retorno. 
+#Además, deberá devolver el nombre de cada película con la fecha de lanzamiento, retorno individual, costo y ganancia de la misma.
+
+@app.get("/get_director")
+async def get_director( director ):
+  if director == "":
+    return {"director": director, "error": "Director no existe"}
+  
+  selected_movies_columns = ['title', 'release_date', 'return', 'budget', 'revenue', 'id']
+  selected_credits_columns = ['id', 'directors']  
+
+  credits_start = time.perf_counter()
+  df_credits = pd.read_parquet("datasets/credits_dataset.parquet", columns=selected_credits_columns)
+  credits_end = time.perf_counter()
+
+  movies_start = time.perf_counter()
+  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
+  movies_end = time.perf_counter()
+
+  sql_result = psql.sqldf("SELECT title, release_date, return, budget, revenue FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.directors) LIKE '%{director}%'".format(director=director.lower()))
+
+  if sql_result.empty:
+    return {
+      "error": "El director {director} no existe".format(director=director),
+      "tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
+      "tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
+      "tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",
+      "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
+    }
+
+  return {
+    "director": director,
+    "peliculas": [
+      {
+        "title": row[0],
+        "release_date": row[1],
+        "return_individual": round(row[2],1),
+        "budget": int(row[3]),
+        "revenue": row[4]
+      } for row in sql_result.itertuples(index=False)
+    ],
+    "tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
+    "tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
+    "tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",
+    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
+    "error": None
+  }
