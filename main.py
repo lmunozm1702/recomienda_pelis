@@ -33,6 +33,13 @@ async def cantidad_filmaciones_mes(mes: int):
   end = time.perf_counter()
 
   sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE strftime('%m', release_date) = '{mes}'".format(mes=mes))
+  if sql_result.empty:
+    return {"error": "No se encontraron resultados para el mes {mes}".format(mes=mes),
+            "dia": mes,
+            "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
+            "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
+          }
+  
   cantidad_filmaciones_mes = sql_result.values[0][0]
   
   return {
@@ -63,6 +70,13 @@ async def cantidad_filmaciones_mes(dia: int):
   end = time.perf_counter()
 
   sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE strftime('%d', release_date) = '{dia}'".format(dia=dia))
+  if sql_result.empty:
+    return {"error": "No se encontraron resultados para el día {dia}".format(dia=dia),
+            "dia": dia,
+            "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
+            "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
+          }
+
   cantidad_filmaciones_dia = sql_result.values[0][0]
   
   return {
@@ -73,4 +87,39 @@ async def cantidad_filmaciones_mes(dia: int):
     "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     "error": None
   }
+
+# Se ingresa el título de una filmación esperando como respuesta el título, el año de estreno y el score.
+@app.get("/score_titulo")
+async def score_titulo(titulo: str):
+  if titulo == "":
+    return {"titulo": titulo, "error": "Título no existe"}
+
+  selected_movies_columns = ['title', 'release_year', 'vote_average']  
+  start = time.perf_counter()
+  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
+  end = time.perf_counter()
+
+  sql_result = psql.sqldf("SELECT title, release_year, vote_average FROM df_movies WHERE LOWER(title) = '{titulo}'".format(titulo=titulo.lower()))
+  if sql_result.empty:
+    return {
+      "error": "La filmación {titulo} no existe".format(titulo=titulo),
+      "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
+      "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
+    }
+  
+  titulo = sql_result.values[0][0]
+  release_year = sql_result.values[0][1]
+  score = sql_result.values[0][2]
+  
+  return {
+    "message": "La película {titulo} fue estrenada en el año {release_year} con un score/popularidad de {score}".format(titulo=titulo, release_year=release_year, score=score),      
+    "titulo": titulo,
+    "release_year": release_year,
+    "score": score,
+    "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
+    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
+    "error": None
+  }
+
+
 
