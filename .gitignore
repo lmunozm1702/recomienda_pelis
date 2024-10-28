@@ -155,3 +155,4 @@ cython_debug/
 datasets/credits.csv
 datasets/movies_dataset.csv
 Diccionario de Datos - PIMLOps.xlsx
+test-credits.py
