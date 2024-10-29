@@ -1,5 +1,4 @@
 import sys
-
 import pandas as pd
 import pandasql as psql
 import json
@@ -7,6 +6,7 @@ import ast
 
 from fastapi import FastAPI
 from funciones import *
+from datetime import datetime
 
 app = FastAPI()
 
@@ -151,10 +151,10 @@ async def get_actor( actor: str ):
   selected_credits_columns = ['id', 'actors']
   
 
-  df_credits = read_credits_dataset(selected_credits_columns)
+  df_credits = pd.read_parquet("datasets/actores_dataset.parquet")
   df_movies = read_movies_dataset(selected_movies_columns)
 
-  sql_result = psql.sqldf("SELECT count(df_movies.id) as cantidad, SUM(return) as retorno_total FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.actors) LIKE '%{actor}%'".format(actor=actor.lower()))
+  sql_result = psql.sqldf("SELECT count(df_movies.id) as cantidad, SUM(return) as retorno_total FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.name) = '{actor}'".format(actor=actor.lower()))
   
   if sql_result.empty or sql_result.values[0][0] == 0 or sql_result.values[0][1] == None:
     return {
@@ -184,12 +184,12 @@ async def get_director( director ):
     return {"director": director, "error": "Director no existe"}
   
   selected_movies_columns = ['title', 'release_date', 'return', 'budget', 'revenue', 'id']
-  selected_credits_columns = ['id', 'directors']  
 
-  df_credits = read_credits_dataset(selected_credits_columns)
+  df_credits = pd.read_parquet("datasets/directores_dataset.parquet")
   df_movies = read_movies_dataset(selected_movies_columns)  
 
-  sql_result = psql.sqldf("SELECT title, release_date, return, budget, revenue FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.directors) LIKE '%{director}%'".format(director=director.lower()))
+  sql_result = psql.sqldf("SELECT title, release_date, return, budget, revenue FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.name) = '{director}'".format(director=director.lower()))
+  retorno_total = sql_result['return'].sum()
 
   if sql_result.empty:
     return {
@@ -198,13 +198,14 @@ async def get_director( director ):
 
   return {
     "director": director,
+    "retorno": retorno_total,
     "peliculas": [
       {
-        "title": row[0],
-        "release_date": row[1],
-        "return_individual": round(row[2],1),
-        "budget": int(row[3]),
-        "revenue": row[4]
+        "titulo": row[0],
+        "fecha de lanzamiento": datetime.strptime(row[1], "%Y-%m-%d").strftime("%d-%m-%Y"),
+        "retorno pelicula": round(row[2],1),
+        "costo": int(row[3]),
+        "ganancia": row[4]
       } for row in sql_result.itertuples(index=False)
     ],
     "error": None
