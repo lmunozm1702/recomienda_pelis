@@ -1,11 +1,12 @@
 import sys
-import time
+
 import pandas as pd
 import pandasql as psql
 import json
 import ast
 
 from fastapi import FastAPI
+from funciones import *
 
 app = FastAPI()
 
@@ -13,9 +14,9 @@ app = FastAPI()
 async def root():
   return {"message": "Hello World"}
 
-# def cantidad_filmaciones_mes( Mes ): Se ingresa un mes en idioma Español. 
-# Debe devolver la cantidad de películas que fueron estrenadas en el mes 
-# consultado en la totalidad del dataset.
+#Se ingresa un mes en idioma Español. Debe devolver la cantidad de películas que fueron estrenadas en el mes 
+#consultado en la totalidad del dataset.
+#http://localhost:8000/cantidad_filmaciones_mes?mes=02
 @app.get("/cantidad_filmaciones_mes")
 async def cantidad_filmaciones_mes(mes: int):
   if mes < 1 or mes > 12:
@@ -28,16 +29,12 @@ async def cantidad_filmaciones_mes(mes: int):
     mes = str(mes)
   
   selected_movies_columns = ['release_date'] 
-  start = time.perf_counter()  
-  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
-  end = time.perf_counter()
+  df_movies = read_movies_dataset(selected_movies_columns)
 
   sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE strftime('%m', release_date) = '{mes}'".format(mes=mes))
   if sql_result.empty:
     return {"error": "No se encontraron resultados para el mes {mes}".format(mes=mes),
             "dia": mes,
-            "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-            "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
           }
   
   cantidad_filmaciones_mes = sql_result.values[0][0]
@@ -46,15 +43,14 @@ async def cantidad_filmaciones_mes(mes: int):
     "message": "{cantidad_filmaciones_mes} películas fueron estrenadas en el mes de {mes}".format(cantidad_filmaciones_mes=cantidad_filmaciones_mes, mes=mes),
     "mes": mes,
     "cantidad_de_filmaciones": cantidad_filmaciones_mes.item(),
-    "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     "error": None
   }
 
 #Se ingresa un día en idioma Español. Debe devolver la cantidad de películas 
 #que fueron estrenadas en día consultado en la totalidad del dataset.
+#http://localhost:8000/cantidad_filmaciones_dia?dia=2
 @app.get("/cantidad_filmaciones_dia")
-async def cantidad_filmaciones_mes(dia: int):
+async def cantidad_filmaciones_dia(dia: int):
   if dia < 1 or dia > 31:
     return {"dia": dia, "error": "Día no existe"}
   
@@ -65,16 +61,12 @@ async def cantidad_filmaciones_mes(dia: int):
     dia = str(dia)
   
   selected_movies_columns = ['release_date'] 
-  start = time.perf_counter()  
-  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
-  end = time.perf_counter()
+  df_movies = read_movies_dataset(selected_movies_columns)
 
   sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE strftime('%d', release_date) = '{dia}'".format(dia=dia))
   if sql_result.empty:
     return {"error": "No se encontraron resultados para el día {dia}".format(dia=dia),
             "dia": dia,
-            "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-            "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
           }
 
   cantidad_filmaciones_dia = sql_result.values[0][0]
@@ -83,28 +75,23 @@ async def cantidad_filmaciones_mes(dia: int):
     "message": "{cantidad_filmaciones_dia} películas fueron estrenadas en el día {dia}".format(cantidad_filmaciones_dia=cantidad_filmaciones_dia, dia=dia),
     "dia": dia,
     "cantidad_de_filmaciones": cantidad_filmaciones_dia.item(),
-    "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     "error": None
   }
 
-# Se ingresa el título de una filmación esperando como respuesta el título, el año de estreno y el score.
+#Se ingresa el título de una filmación esperando como respuesta el título, el año de estreno y el score.
+#http://localhost:8000/score_titulo?titulo=toy%20story
 @app.get("/score_titulo")
 async def score_titulo(titulo: str):
   if titulo == "":
     return {"titulo": titulo, "error": "Título no existe"}
 
   selected_movies_columns = ['title', 'release_year', 'popularity']  
-  start = time.perf_counter()
-  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
-  end = time.perf_counter()
-
+  df_movies = read_movies_dataset(selected_movies_columns)
+  
   sql_result = psql.sqldf("SELECT title, release_year, popularity FROM df_movies WHERE LOWER(title) = '{titulo}'".format(titulo=titulo.lower()))
   if sql_result.empty:
     return {
       "error": "La filmación {titulo} no existe".format(titulo=titulo),
-      "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-      "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     }
   
   titulo = sql_result.values[0][0]
@@ -116,14 +103,13 @@ async def score_titulo(titulo: str):
     "titulo": titulo,
     "release_year": release_year,
     "score": score,
-    "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     "error": None
   }
 
   #Se ingresa el título de una filmación esperando como respuesta el título, la cantidad de votos y el valor promedio de las votaciones. 
   # La misma variable deberá de contar con al menos 2000 valoraciones, caso contrario, debemos contar con un mensaje avisando que no cumple
   # esta condición y que por ende, no se devuelve ningun valor.
+  #http://localhost:8000/votos_titulo?titulo=toy%20story
 
 @app.get("/votos_titulo")
 async def votos_titulo( titulo: str):
@@ -131,16 +117,12 @@ async def votos_titulo( titulo: str):
     return {"titulo": titulo, "error": "Título no existe"}
   selected_movies_columns = ['title', 'vote_count', 'vote_average', 'release_year'] 
   
-  start = time.perf_counter()
-  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
-  end = time.perf_counter()
+  df_movies = read_movies_dataset(selected_movies_columns)
 
   sql_result = psql.sqldf("SELECT title, vote_count, vote_average, release_year FROM df_movies WHERE LOWER(title) = '{titulo}'".format(titulo=titulo.lower()))
   if sql_result.empty:
     return {
       "error": "La película {titulo} no existe".format(titulo=titulo),
-      "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-      "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     }
   
   titulo = sql_result.values[0][0]
@@ -152,8 +134,6 @@ async def votos_titulo( titulo: str):
     return {
       "message": "La película {titulo} no cuenta con suficientes votos para entregar un resultado".format(titulo=titulo),
       "vote_count" : vote_count,
-      "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-      "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     }
   
   return {
@@ -162,13 +142,12 @@ async def votos_titulo( titulo: str):
     "vote_count": vote_count,
     "vote_average": vote_average,
     "release_year": release_year,
-    "tiempo_lectura_parquet_movies": f"{end - start:0.4f} segundos",
-    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     "error": None
   }
     
 #Se ingresa el nombre de un actor que se encuentre dentro de un dataset debiendo devolver el éxito del mismo medido a través del retorno. 
 #Además, la cantidad de películas que en las que ha participado y el promedio de retorno. La definición no deberá considerar directores.
+#http://localhost:8000/get_actor?actor=KEVIN%20COSTNER
 @app.get("/get_actor")
 async def get_actor( actor: str ):
   if actor == "":
@@ -176,23 +155,15 @@ async def get_actor( actor: str ):
   selected_movies_columns = ['return', 'id'] 
   selected_credits_columns = ['id', 'actors']
   
-  credits_start = time.perf_counter()
-  df_credits = pd.read_parquet("datasets/credits_dataset.parquet", columns=selected_credits_columns)
-  credits_end = time.perf_counter()
 
-  movies_start = time.perf_counter()
-  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
-  movies_end = time.perf_counter()
+  df_credits = read_credits_dataset(selected_credits_columns)
+  df_movies = read_movies_dataset(selected_movies_columns)
 
   sql_result = psql.sqldf("SELECT count(df_movies.id) as cantidad, SUM(return) as retorno_total FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.actors) LIKE '%{actor}%'".format(actor=actor.lower()))
   
   if sql_result.empty or sql_result.values[0][0] == 0 or sql_result.values[0][1] == None:
     return {
       "error": "El actor {actor} no existe".format(actor=actor),
-      "tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
-      "tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
-      "tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",
-      "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     }
   
   cantidad = (sql_result.values[0][0])
@@ -205,15 +176,12 @@ async def get_actor( actor: str ):
     "cantidad": cantidad,
     "retorno_total": retorno_total,
     "retorno_promedio": retorno_promedio,
-    "tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
-    "tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
-    "tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",
-    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     "error": None
   }
 
 #Se ingresa el nombre de un director que se encuentre dentro de un dataset debiendo devolver el éxito del mismo medido a través del retorno. 
 #Además, deberá devolver el nombre de cada película con la fecha de lanzamiento, retorno individual, costo y ganancia de la misma.
+#http://localhost:8000/get_director?director=STEVEN%20SPIELBERG
 
 @app.get("/get_director")
 async def get_director( director ):
@@ -223,23 +191,14 @@ async def get_director( director ):
   selected_movies_columns = ['title', 'release_date', 'return', 'budget', 'revenue', 'id']
   selected_credits_columns = ['id', 'directors']  
 
-  credits_start = time.perf_counter()
-  df_credits = pd.read_parquet("datasets/credits_dataset.parquet", columns=selected_credits_columns)
-  credits_end = time.perf_counter()
-
-  movies_start = time.perf_counter()
-  df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
-  movies_end = time.perf_counter()
+  df_credits = read_credits_dataset(selected_credits_columns)
+  df_movies = read_movies_dataset(selected_movies_columns)  
 
   sql_result = psql.sqldf("SELECT title, release_date, return, budget, revenue FROM df_movies join df_credits on df_movies.id = df_credits.id WHERE LOWER(df_credits.directors) LIKE '%{director}%'".format(director=director.lower()))
 
   if sql_result.empty:
     return {
       "error": "El director {director} no existe".format(director=director),
-      "tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
-      "tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
-      "tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",
-      "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     }
 
   return {
@@ -253,9 +212,5 @@ async def get_director( director ):
         "revenue": row[4]
       } for row in sql_result.itertuples(index=False)
     ],
-    "tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
-    "tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
-    "tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",
-    "tamaño_dataset_movies": f"{sys.getsizeof(df_movies)/1024/1024:0.4f} MB",
     "error": None
   }
