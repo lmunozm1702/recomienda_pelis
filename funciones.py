@@ -16,6 +16,24 @@ def read_credits_dataset(selected_credits_columns):
 
   return df_credits
 
+def mes_a_numeros(mes):
+  meses = {
+    "enero": "01",
+    "febrero": "02",
+    "marzo": "03",
+    "abril": "04",
+    "mayo": "05",
+    "junio": "06",
+    "julio": "07",
+    "agosto": "08",
+    "septiembre": "09",
+    "octubre": "10",
+    "noviembre": "11",
+    "diciembre": "12"
+  }
+
+  return meses.get(mes.lower(), None)
+
 #"tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
 #"tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
 #"tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",

@@ -18,20 +18,15 @@ async def root():
 #consultado en la totalidad del dataset.
 #http://localhost:8000/cantidad_filmaciones_mes?mes=02
 @app.get("/cantidad_filmaciones_mes")
-async def cantidad_filmaciones_mes(mes: int):
-  if mes < 1 or mes > 12:
+async def cantidad_filmaciones_mes(mes: str):
+  mes_numerico = mes_a_numeros(mes)
+  if mes_numerico == None:
     return {"mes": mes, "error": "Mes no existe"}
-  
-  #transformar el mes a string de 2 digitos
-  if mes < 10:
-    mes = "0" + str(mes)
-  else:
-    mes = str(mes)
-  
+    
   selected_movies_columns = ['release_date'] 
   df_movies = read_movies_dataset(selected_movies_columns)
 
-  sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE strftime('%m', release_date) = '{mes}'".format(mes=mes))
+  sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE strftime('%m', release_date) = '{mes}'".format(mes=mes_numerico))
   if sql_result.empty:
     return {"error": "No se encontraron resultados para el mes {mes}".format(mes=mes),
             "dia": mes,
