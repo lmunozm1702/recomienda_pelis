@@ -2,6 +2,7 @@
 import time
 import pandas as pd
 
+#Carga dataset de películas
 def read_movies_dataset(selected_movies_columns):
   start = time.perf_counter()  
   df_movies = pd.read_parquet("datasets/movies_dataset.parquet", columns=selected_movies_columns)
@@ -9,6 +10,7 @@ def read_movies_dataset(selected_movies_columns):
 
   return df_movies
 
+#Carga dataset de créditos
 def read_credits_dataset(selected_credits_columns):
   credits_start = time.perf_counter()
   df_credits = pd.read_parquet("datasets/credits_dataset.parquet", columns=selected_credits_columns)
@@ -16,6 +18,7 @@ def read_credits_dataset(selected_credits_columns):
 
   return df_credits
 
+#Convierte el mes recibido en forma te texto (ej: "enero") a su correspondiente número (ej: "01")
 def mes_a_numeros(mes):
   meses = {
     "enero": "01",
