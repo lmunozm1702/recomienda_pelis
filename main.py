@@ -86,7 +86,7 @@ async def score_titulo(titulo: str):
   sql_result = psql.sqldf("SELECT title, release_year, popularity FROM df_movies WHERE LOWER(title) = '{titulo}'".format(titulo=titulo.lower()))
   if sql_result.empty:
     return {
-      "error": "La filmación {titulo} no existe".format(titulo=titulo),
+      "error": "La película {titulo} no existe".format(titulo=titulo),
     }
   
   titulo = sql_result.values[0][0]
