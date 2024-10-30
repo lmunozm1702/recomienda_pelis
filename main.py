@@ -45,20 +45,15 @@ async def cantidad_filmaciones_mes(mes: str):
 #que fueron estrenadas en día consultado en la totalidad del dataset.
 #http://localhost:8000/cantidad_filmaciones_dia?dia=2
 @app.get("/cantidad_filmaciones_dia")
-async def cantidad_filmaciones_dia(dia: int):
-  if dia < 1 or dia > 31:
+async def cantidad_filmaciones_dia(dia: str):
+  dia_numero = dia_a_numeros(dia)
+  if dia_numero == None:
     return {"dia": dia, "error": "Día no existe"}
-  
-  #transformar el mes a string de 2 digitos
-  if dia < 10:
-    dia = "0" + str(dia)
-  else:
-    dia = str(dia)
   
   selected_movies_columns = ['release_date'] 
   df_movies = read_movies_dataset(selected_movies_columns)
 
-  sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE strftime('%d', release_date) = '{dia}'".format(dia=dia))
+  sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE CAST(strftime('%u', release_date) AS INTEGER) = '{dia}'".format(dia=dia_numero))
   if sql_result.empty:
     return {"error": "No se encontraron resultados para el día {dia}".format(dia=dia),
             "dia": dia,

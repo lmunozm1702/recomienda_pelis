@@ -37,6 +37,21 @@ def mes_a_numeros(mes):
 
   return meses.get(mes.lower(), None)
 
+def dia_a_numeros(dia):
+  dias = {
+    "lunes": 1,
+    "martes": 2,
+    "miercoles": 3,
+    "miércoles": 3,
+    "jueves": 4,
+    "viernes": 5,
+    "sabado": 6,
+    "sábado": 6,
+    "domingo": 7
+  }
+
+  return dias.get(dia.lower(), None)
+
 #"tiempo_lectura_parquet_credits": f"{credits_end - credits_start:0.4f} segundos",
 #"tamaño_dataset_credits": f"{sys.getsizeof(df_credits)/1024/1024:0.4f} MB",
 #"tiempo_lectura_parquet_movies": f"{movies_end - movies_start:0.4f} segundos",
