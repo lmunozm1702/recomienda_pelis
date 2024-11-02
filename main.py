@@ -53,10 +53,7 @@ async def cantidad_filmaciones_dia(dia: str):
   selected_movies_columns = ['release_date'] 
   df_movies = read_movies_dataset(selected_movies_columns)
 
-  print(df_movies.info())
-
-  sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE CAST(strftime('%u', release_date) AS INTEGER) = '{dia}'".format(dia=dia_numero))
-  print(sql_result)
+  sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE CAST(strftime('%w', release_date) AS INTEGER) = {dia}".format(dia=dia_numero))
   
   if sql_result.empty:
     return {"error": "No se encontraron resultados para el día {dia}".format(dia=dia),

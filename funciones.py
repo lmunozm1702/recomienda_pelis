@@ -47,7 +47,7 @@ def dia_a_numeros(dia):
     "viernes": 5,
     "sabado": 6,
     "sábado": 6,
-    "domingo": 7
+    "domingo": 0
   }
 
   return dias.get(dia.lower(), None)
