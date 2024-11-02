@@ -16,7 +16,7 @@ async def root():
 
 #Se ingresa un mes en idioma Español. Debe devolver la cantidad de películas que fueron estrenadas en el mes 
 #consultado en la totalidad del dataset.
-#http://localhost:8000/cantidad_filmaciones_mes?mes=02
+#http://localhost:8000/cantidad_filmaciones_mes?mes=febrero
 @app.get("/cantidad_filmaciones_mes")
 async def cantidad_filmaciones_mes(mes: str):
   mes_numerico = mes_a_numeros(mes)
@@ -43,7 +43,7 @@ async def cantidad_filmaciones_mes(mes: str):
 
 #Se ingresa un día en idioma Español. Debe devolver la cantidad de películas 
 #que fueron estrenadas en día consultado en la totalidad del dataset.
-#http://localhost:8000/cantidad_filmaciones_dia?dia=2
+#http://localhost:8000/cantidad_filmaciones_dia?dia=martes
 @app.get("/cantidad_filmaciones_dia")
 async def cantidad_filmaciones_dia(dia: str):
   dia_numero = dia_a_numeros(dia)
@@ -53,7 +53,11 @@ async def cantidad_filmaciones_dia(dia: str):
   selected_movies_columns = ['release_date'] 
   df_movies = read_movies_dataset(selected_movies_columns)
 
+  print(df_movies.info())
+
   sql_result = psql.sqldf("SELECT COUNT(*) FROM df_movies WHERE CAST(strftime('%u', release_date) AS INTEGER) = '{dia}'".format(dia=dia_numero))
+  print(sql_result)
+  
   if sql_result.empty:
     return {"error": "No se encontraron resultados para el día {dia}".format(dia=dia),
             "dia": dia,
