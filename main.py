@@ -175,7 +175,7 @@ async def get_actor( actor: str ):
 #http://localhost:8000/get_director?director=STEVEN%20SPIELBERG
 
 @app.get("/get_director")
-async def get_director( director ):
+async def get_director( director: str ):
   if director == "":
     return {"director": director, "error": "Director no existe"}
   
@@ -204,5 +204,23 @@ async def get_director( director ):
         "ganancia": row[4]
       } for row in sql_result.itertuples(index=False)
     ],
+    "error": None
+  }
+
+@app.get("/recomendacion")
+async def recomendacion(titulo: str):
+  if titulo == "":
+    return {"titulo": titulo, "error": "Título no existe"}
+
+  lista_recomendaciones = busca_recomendaciones(titulo.lower())
+  
+  if len(lista_recomendaciones) == 0:
+    return {
+      "error": "La película {titulo} no existe".format(titulo=titulo),
+    }
+  
+  return {
+    "message": "Recomendaciones para la película {titulo}".format(titulo=titulo),
+    "recomendaciones": lista_recomendaciones,
     "error": None
   }
