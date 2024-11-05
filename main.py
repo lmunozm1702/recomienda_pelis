@@ -198,7 +198,7 @@ async def get_director( director: str ):
     "peliculas": [
       {
         "titulo": row[0],
-        "fecha de lanzamiento": datetime.strptime(row[1], "%Y-%m-%d").strftime("%d-%m-%Y"),
+        "fecha de lanzamiento": pd.to_datetime(row[1]).strftime("%Y-%m-%d"),
         "retorno pelicula": round(row[2],1),
         "costo": int(row[3]),
         "ganancia": row[4]
