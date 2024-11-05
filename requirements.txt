@@ -59,5 +59,4 @@ uvicorn==0.20.0
 wcwidth==0.2.5
 wheel==0.44.0
 sklearn-pandas==2.2.0
-matplotlib==3.9.2
-seaborn==0.13.2
+
