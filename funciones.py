@@ -92,7 +92,7 @@ def busca_recomendaciones(titulo):
   puntajes = similitud_coseno[indice_titulo]
   
   #busca los 10 mejores puntajes ordenados de mayor a menor
-  peliculas_similares = sorted(list(enumerate(puntajes)), reverse=True, key=lambda x: x[1])[1:11]
+  peliculas_similares = sorted(list(enumerate(puntajes)), reverse=True, key=lambda x: x[1])[1:6]
   
   #busca los indices en el dataset de los 10 mejores puntajes
   indices_recomendadas = [p[0] for p in peliculas_similares]
