@@ -31,7 +31,7 @@ El proyecto tiene 3 partes principales:
 ### Utilización
 
 - ETL y EDA: ejecutar los notebooks `etl-movies.ipynb`, `etl-credits.ipynb`, `eda_movies.ipynb` y `eda_credits.csv`, en ese orden, para generar los archivos que serán utilizados por el API.
-- API: una vez en el [landing page](https://recomienda-pelis.onrender.com/docs), utilizar cada uno de los endpoints ingresando los parámetros de entrada especificados para cada uno de ellos. Haz click para ver la [demo]().
+- API: una vez en el [landing page](https://recomienda-pelis.onrender.com/docs), utilizar cada uno de los endpoints ingresando los parámetros de entrada especificados para cada uno de ellos. Haz click para ver la [demo](https://www.loom.com/share/58c64edf2e344e4b82cf42bec5e7bfba?sid=7bda364a-9b1c-42f0-9597-66142c6a9241).
 
 #### Consideraciones:
 
